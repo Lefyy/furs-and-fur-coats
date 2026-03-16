@@ -16,5 +16,11 @@ class Cart(Base):
         nullable=False,
     )
 
-    user = relationship("User", back_populates="cart")
-    items = relationship("CartItem", back_populates="cart", cascade="all, delete-orphan")
+    user = relationship("User", back_populates="cart", lazy="selectin")
+    items = relationship(
+        "CartItem",
+        back_populates="cart",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )
+

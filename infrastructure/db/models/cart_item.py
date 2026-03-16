@@ -16,5 +16,6 @@ class CartItem(Base):
     product_id = mapped_column(ForeignKey("products.id"), nullable=False, index=True)
     quantity = mapped_column(nullable=False, default=1)
 
-    cart = relationship("Cart", back_populates="items")
-    product = relationship("Product", back_populates="cart_items")
+    cart = relationship("Cart", back_populates="items", lazy="selectin")
+    product = relationship("Product", back_populates="cart_items", lazy="selectin")
+

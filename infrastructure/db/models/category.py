@@ -11,6 +11,13 @@ class Category(Base):
     name = mapped_column(String(255), nullable=False)
     parent_id = mapped_column(ForeignKey("categories.id"), nullable=True)
 
-    parent = relationship("Category", remote_side=[id], back_populates="children")
-    children = relationship("Category", back_populates="parent")
-    products = relationship("Product", back_populates="category")
+    parent = relationship("Category", remote_side=[id], back_populates="children", lazy="selectin")
+    children = relationship(
+        "Category",
+        back_populates="parent",
+        cascade="all, delete-orphan",
+        single_parent=True,
+        lazy="selectin",
+    )
+    products = relationship("Product", back_populates="category", lazy="selectin")
+

@@ -13,5 +13,18 @@ class User(Base):
     password_hash = mapped_column(String(255), nullable=False)
     created_at = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
-    cart = relationship("Cart", back_populates="user", uselist=False)
-    orders = relationship("Order", back_populates="user")
+    cart = relationship(
+        "Cart",
+        back_populates="user",
+        uselist=False,
+        cascade="all, delete-orphan",
+        single_parent=True,
+        lazy="selectin",
+    )
+    orders = relationship(
+        "Order",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )
+

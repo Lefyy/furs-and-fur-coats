@@ -14,6 +14,12 @@ class Order(Base):
     address = mapped_column(Text, nullable=False)
     created_at = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
-    user = relationship("User", back_populates="orders")
-    status = relationship("OrderStatus", back_populates="orders")
-    items = relationship("OrderItem", back_populates="order", cascade="all, delete-orphan")
+    user = relationship("User", back_populates="orders", lazy="selectin")
+    status = relationship("OrderStatus", back_populates="orders", lazy="selectin")
+    items = relationship(
+        "OrderItem",
+        back_populates="order",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )
+

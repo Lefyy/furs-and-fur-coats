@@ -10,4 +10,4 @@ class OrderStatus(Base):
     id = mapped_column(primary_key=True, autoincrement=True)
     name = mapped_column(String(32), nullable=False, unique=True)
 
-    orders = relationship("Order", back_populates="status")
+    orders = relationship("Order", back_populates="status", lazy="selectin")

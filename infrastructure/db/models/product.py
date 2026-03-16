@@ -21,6 +21,7 @@ class Product(Base):
         nullable=False,
     )
 
-    category = relationship("Category", back_populates="products")
-    cart_items = relationship("CartItem", back_populates="product")
-    order_items = relationship("OrderItem", back_populates="product")
+    category = relationship("Category", back_populates="products", lazy="selectin")
+    cart_items = relationship("CartItem", back_populates="product", lazy="selectin")
+    order_items = relationship("OrderItem", back_populates="product", lazy="selectin")
+

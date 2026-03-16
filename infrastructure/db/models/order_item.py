@@ -14,5 +14,6 @@ class OrderItem(Base):
     quantity = mapped_column(nullable=False)
     price = mapped_column(Numeric(10, 2), nullable=False)
 
-    order = relationship("Order", back_populates="items")
-    product = relationship("Product", back_populates="order_items")
+    order = relationship("Order", back_populates="items", lazy="selectin")
+    product = relationship("Product", back_populates="order_items", lazy="selectin")
+
