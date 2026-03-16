@@ -1,0 +1,6 @@
+fastapi
+sqlalchemy
+psycopg[binary]
+pydantic
+python-dotenv
+pytest
