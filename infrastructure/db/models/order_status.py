@@ -1,0 +1,13 @@
+from sqlalchemy import String
+from sqlalchemy.orm import mapped_column, relationship
+
+from infrastructure.db.base import Base
+
+
+class OrderStatus(Base):
+    __tablename__ = "order_statuses"
+
+    id = mapped_column(primary_key=True, autoincrement=True)
+    name = mapped_column(String(32), nullable=False, unique=True)
+
+    orders = relationship("Order", back_populates="status")
