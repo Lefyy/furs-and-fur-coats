@@ -10,10 +10,10 @@ class UserRepository(BaseRepository):
         super().__init__(session)
 
     def create(self, email: str, phone: str, password_hash: str) -> User:
-        user = User(email=email, phone=phone, password_hash=password_hash)
-        self.session.add(user)
-        self.flush()
-        return user
+        def operation() -> User:
+            user = User(email=email, phone=phone, password_hash=password_hash)
+            self.session.add(user)
+        return self.run_in_transaction(operation)
 
     def get_by_id(self, user_id: int) -> User | None:
         stmt = select(User).where(User.id == user_id)

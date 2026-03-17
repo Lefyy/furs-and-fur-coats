@@ -1,4 +1,10 @@
+from collections.abc import Callable
+from typing import TypeVar
+
 from sqlalchemy.orm import Session
+
+
+ResultT = TypeVar("ResultT")
 
 
 class BaseRepository:
@@ -13,3 +19,13 @@ class BaseRepository:
 
     def rollback(self) -> None:
         self.session.rollback()
+
+    def run_in_transaction(self, operation: Callable[[], ResultT]) -> ResultT:
+        try:
+            result = operation()
+            self.flush()
+            self.commit()
+            return result
+        except Exception:
+            self.rollback()
+            raise

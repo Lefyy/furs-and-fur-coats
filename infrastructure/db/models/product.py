@@ -1,4 +1,4 @@
-from sqlalchemy import DateTime, ForeignKey, Numeric, String, Text, func
+from sqlalchemy import DateTime, ForeignKey, Integer, Numeric, String, Text, func
 from sqlalchemy.orm import mapped_column, relationship
 
 from infrastructure.db.base import Base
@@ -7,7 +7,7 @@ from infrastructure.db.base import Base
 class Product(Base):
     __tablename__ = "products"
 
-    id = mapped_column(primary_key=True, autoincrement=True)
+    id = mapped_column(Integer, primary_key=True, autoincrement=True)
     name = mapped_column(String(255), nullable=False)
     description = mapped_column(Text, nullable=False)
     price = mapped_column(Numeric(10, 2), nullable=False)

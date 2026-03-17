@@ -1,4 +1,4 @@
-from sqlalchemy import DateTime, ForeignKey, Numeric, Text, func
+from sqlalchemy import DateTime, ForeignKey, Integer, Numeric, Text, func
 from sqlalchemy.orm import mapped_column, relationship
 
 from infrastructure.db.base import Base
@@ -7,7 +7,7 @@ from infrastructure.db.base import Base
 class Order(Base):
     __tablename__ = "orders"
 
-    id = mapped_column(primary_key=True, autoincrement=True)
+    id = mapped_column(Integer, primary_key=True, autoincrement=True)
     user_id = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
     status_id = mapped_column(ForeignKey("order_statuses.id"), nullable=False, index=True)
     total_price = mapped_column(Numeric(10, 2), nullable=False)
