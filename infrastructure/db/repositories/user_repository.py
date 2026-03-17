@@ -1,7 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from infrastructure.db.models import User
+from infrastructure.db.models import OAuthAccount, User
 from infrastructure.db.repositories.base import BaseRepository
 
 
@@ -13,6 +13,8 @@ class UserRepository(BaseRepository):
         def operation() -> User:
             user = User(email=email, phone=phone, password_hash=password_hash)
             self.session.add(user)
+            return user
+        
         return self.run_in_transaction(operation)
 
     def get_by_id(self, user_id: int) -> User | None:
@@ -26,3 +28,23 @@ class UserRepository(BaseRepository):
     def get_by_phone(self, phone: str) -> User | None:
         stmt = select(User).where(User.phone == phone)
         return self.session.scalar(stmt)
+    
+    def get_by_oauth(self, provider: str, oauth_subject: str) -> User | None:
+        stmt = (
+            select(User)
+            .join(OAuthAccount, OAuthAccount.user_id == User.id)
+            .where(OAuthAccount.provider == provider, OAuthAccount.oauth_subject == oauth_subject)
+        )
+        return self.session.scalar(stmt)
+
+    def attach_oauth_account(self, user_id: int, provider: str, oauth_subject: str) -> User:
+        def operation() -> User:
+            user = self.get_by_id(user_id)
+            if user is None:
+                raise ValueError("User not found")
+            account = OAuthAccount(user_id=user_id, provider=provider, oauth_subject=oauth_subject)
+            self.session.add(account)
+            return user
+
+        return self.run_in_transaction(operation)
+

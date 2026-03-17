@@ -16,6 +16,10 @@ class CartRepository(BaseRepository):
             cart = self.session.scalar(stmt)
             if cart is not None:
                 return cart
+            else:
+                cart = Cart(user_id=user_id)
+                self.session.add(cart)
+                return cart
 
         return self.run_in_transaction(operation)
 
@@ -40,6 +44,8 @@ class CartRepository(BaseRepository):
                 self.session.add(cart_item)
             else:
                 cart_item.quantity += quantity
+            
+            return cart_item
 
         return self.run_in_transaction(operation)
 
@@ -58,6 +64,7 @@ class CartRepository(BaseRepository):
                 return None
 
             cart_item.quantity = quantity
+            return cart_item
 
         return self.run_in_transaction(operation)
 
@@ -76,6 +83,7 @@ class CartRepository(BaseRepository):
                 return False
 
             self.session.delete(cart_item)
+            return True
 
         return self.run_in_transaction(operation)
 

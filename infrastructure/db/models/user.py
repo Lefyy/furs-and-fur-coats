@@ -1,7 +1,7 @@
 from sqlalchemy import DateTime, Integer, String, func
 from sqlalchemy.orm import mapped_column, relationship
 
-from infrastructure.db.base import Base
+from infrastructure.db.models.base import Base
 
 
 class User(Base):
@@ -10,7 +10,7 @@ class User(Base):
     id = mapped_column(Integer, primary_key=True, autoincrement=True)
     email = mapped_column(String(255), unique=True, nullable=False, index=True)
     phone = mapped_column(String(32), unique=True, nullable=False, index=True)
-    password_hash = mapped_column(String(255), nullable=False)
+    password_hash = mapped_column(String(255), nullable=True)
     created_at = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     cart = relationship(
@@ -27,4 +27,11 @@ class User(Base):
         cascade="all, delete-orphan",
         lazy="selectin",
     )
+    oauth_accounts = relationship(
+        "OAuthAccount",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )
+
 

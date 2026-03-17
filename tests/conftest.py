@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from infrastructure.db.base import Base
+from infrastructure.db.models.base import Base
 
 
 @pytest.fixture()

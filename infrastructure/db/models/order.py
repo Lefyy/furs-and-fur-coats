@@ -1,7 +1,7 @@
 from sqlalchemy import DateTime, ForeignKey, Integer, Numeric, Text, func
 from sqlalchemy.orm import mapped_column, relationship
 
-from infrastructure.db.base import Base
+from infrastructure.db.models.base import Base
 
 
 class Order(Base):

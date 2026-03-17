@@ -3,5 +3,8 @@ sqlalchemy
 psycopg[binary]
 pydantic
 python-dotenv
+python-jose
 pytest
 httpx
+redis
+psycopg2

@@ -1,6 +1,7 @@
 from infrastructure.db.models.cart import Cart
 from infrastructure.db.models.cart_item import CartItem
 from infrastructure.db.models.category import Category
+from infrastructure.db.models.oauth_account import OAuthAccount
 from infrastructure.db.models.order import Order
 from infrastructure.db.models.order_item import OrderItem
 from infrastructure.db.models.order_status import OrderStatus
@@ -11,6 +12,7 @@ __all__ = [
     "User",
     "Product",
     "Category",
+    "OAuthAccount",
     "Cart",
     "CartItem",
     "Order",
