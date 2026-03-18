@@ -4,6 +4,7 @@ import hashlib
 from app.exceptions import BadRequestError, UnauthorizedError
 from app.schemas.auth_schema import TokenResponse, UserAuthResponse
 from app.services.oauth_state_service import OAuthStateService
+from app.services.oauth_refresh_token_service import OAuthRefreshTokenService
 from app.utils.security import create_access_token, hash_password, verify_password
 from infrastructure.db.models import User
 from infrastructure.db.repositories import UserRepository
@@ -15,6 +16,7 @@ class OAuthUserInfo:
     subject: str
     email: str | None
     phone: str | None = None
+    refresh_token: str | None = None
 
 @dataclass
 class OAuthRequest:
@@ -22,6 +24,10 @@ class OAuthRequest:
     code: str | None = None
     redirect_uri: str | None = None
     token: str | None = None
+    state: str | None = None
+    device_id: str | None = None
+    device_name: str | None = None
+    code_verifier: str | None = None
 
 class OAuthGateway:
     def fetch_user_info(self, request: OAuthRequest) -> OAuthUserInfo:
@@ -34,12 +40,14 @@ class AuthService:
         user_repository: UserRepository,
         oauth_gateway: OAuthGateway,
         oauth_state_service: OAuthStateService,
+        oauth_refresh_token_service: OAuthRefreshTokenService,
         jwt_secret: str,
         jwt_expire_minutes: int,
     ) -> None:
         self.user_repository = user_repository
         self.oauth_gateway = oauth_gateway
         self.oauth_state_service = oauth_state_service
+        self.oauth_refresh_token_service = oauth_refresh_token_service
         self.jwt_secret = jwt_secret
         self.jwt_expire_minutes = jwt_expire_minutes
 
@@ -59,10 +67,20 @@ class AuthService:
             raise UnauthorizedError("Invalid credentials")
         return self._build_token_response(user)
 
-    def oauth_login(self, request: OAuthRequest, state: str) -> TokenResponse:
-        self.oauth_state_service.validate_state(state)
+    def oauth_login(self, request: OAuthRequest) -> TokenResponse:
+        if request.state is None:
+            raise UnauthorizedError("Missing OAuth state")
+
+        self.oauth_state_service.validate_state(request.state)
 
         oauth_user = self.oauth_gateway.fetch_user_info(request)
+
+        if oauth_user.refresh_token:
+            self.oauth_refresh_token_service.save_or_update_token(
+                provider=request.provider,
+                subject=oauth_user.subject,
+                token=oauth_user.refresh_token,
+            )
 
         user = self.user_repository.get_by_oauth(
             provider=request.provider,

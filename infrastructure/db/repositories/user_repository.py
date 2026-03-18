@@ -42,8 +42,8 @@ class UserRepository(BaseRepository):
             user = self.get_by_id(user_id)
             if user is None:
                 raise ValueError("User not found")
-            account = OAuthAccount(user_id=user_id, provider=provider, oauth_subject=oauth_subject)
-            self.session.add(account)
+            account = OAuthAccount(provider=provider, oauth_subject=oauth_subject)
+            user.oauth_accounts.append(account)
             return user
 
         return self.run_in_transaction(operation)

@@ -1,7 +1,7 @@
 import hashlib
 import hmac
 import secrets
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from jose import jwt, JWTError, ExpiredSignatureError
 
@@ -39,7 +39,7 @@ def verify_password(password: str, password_hash: str) -> bool:
 
 
 def create_access_token(subject: str, secret_key: str, expires_minutes: int) -> str:
-    now = datetime.now(UTC)
+    now = datetime.now(timezone.utc)
     payload = {
         "sub": subject,
         "iat": now,
