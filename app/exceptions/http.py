@@ -19,3 +19,9 @@ class BadRequestError(AppHTTPException):
 class UnauthorizedError(AppHTTPException):
     def __init__(self, message: str = "Authentication required") -> None:
         super().__init__(status_code=status.HTTP_401_UNAUTHORIZED, code="unauthorized", message=message)
+
+
+class ForbiddenError(AppHTTPException):
+    def __init__(self, message: str = "Forbidden") -> None:
+        super().__init__(status_code=status.HTTP_403_FORBIDDEN, code="forbidden", message=message)
+

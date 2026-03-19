@@ -14,6 +14,10 @@ from infrastructure.db.db_session import get_db_session
 from infrastructure.db.repositories import CartRepository, CategoryRepository, OrderRepository, ProductRepository, UserRepository
 
 
+def get_user_repository(session: Session = Depends(get_db_session)) -> UserRepository:
+    return UserRepository(session=session)
+
+
 def get_catalog_service(session: Session = Depends(get_db_session)) -> CatalogService:
     return CatalogService(
         product_repository=ProductRepository(session=session),
@@ -39,7 +43,7 @@ def get_order_service(session: Session = Depends(get_db_session)) -> OrderServic
 def get_auth_service(session: Session = Depends(get_db_session)) -> AuthService:
     dadata_gateway = DadataGateway()
     return AuthService(
-        user_repository=UserRepository(session=session),
+        user_repository=get_user_repository(session=session),
         oauth_gateway=HttpOAuthGateway(),
         oauth_state_service=OAuthStateService(),
         oauth_refresh_token_service=OAuthRefreshTokenService(ttl_seconds=settings.oauth_refresh_token_ttl_seconds),

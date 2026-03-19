@@ -22,6 +22,7 @@ class YandexAccessTokenResponse(BaseModel):
     access_token: str
     refresh_token: str
 
+
 class YandexUserInfo(BaseModel):
     subject: str
     email: str | None
