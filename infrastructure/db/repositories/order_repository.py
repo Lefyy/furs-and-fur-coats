@@ -23,7 +23,17 @@ class OrderRepository(BaseRepository):
         stmt = select(OrderStatus).where(OrderStatus.name == name)
         return self.session.scalar(stmt)
 
-    def create(self, user_id: int, address: str, status_name: str = "created") -> Order:
+    def create(
+        self,
+        user_id: int,
+        address: str,
+        address_raw: str | None,
+        postal_code: str | None,
+        address_metadata: dict | None,
+        address_enrichment_status: str | None,
+        status_name: str = "created",
+    ) -> Order:
+
         cart: Cart | None = None
 
         def operation() -> Order:
@@ -47,7 +57,16 @@ class OrderRepository(BaseRepository):
                 raise ValueError("Cannot create order from empty cart")
 
             total = sum(Decimal(product.price) * item.quantity for item, product in rows)
-            order = Order(user_id=user_id, status_id=status.id, total_price=total, address=address)
+            order = Order(
+                user_id=user_id,
+                status_id=status.id,
+                total_price=total,
+                address=address,
+                address_raw=address_raw,
+                postal_code=postal_code,
+                address_metadata=address_metadata,
+                address_enrichment_status=address_enrichment_status,
+            )
             self.session.add(order)
             self.flush()
 
@@ -68,3 +87,24 @@ class OrderRepository(BaseRepository):
         if cart is not None:
             self.session.expire(cart, ["items"])
         return order
+    
+    def update_address_enrichment(
+        self,
+        order_id: int,
+        address: str,
+        postal_code: str | None,
+        address_metadata: dict | None,
+        address_enrichment_status: str,
+    ) -> Order:
+        def operation() -> Order:
+            order = self.get_by_id(order_id)
+            if order is None:
+                raise ValueError("Order not found")
+            order.address = address
+            order.postal_code = postal_code
+            order.address_metadata = address_metadata
+            order.address_enrichment_status = address_enrichment_status
+            return order
+
+        return self.run_in_transaction(operation)
+

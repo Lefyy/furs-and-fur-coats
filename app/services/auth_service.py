@@ -1,14 +1,20 @@
 import hashlib
+import logging
 
 from app.exceptions import BadRequestError, UnauthorizedError
 from app.schemas.auth_schema import TokenResponse, UserAuthResponse, YandexAccessTokenResponse, YandexUserInfo, YandexOAuthRequest
+from app.services.contact_formatting_service import ContactFormattingService
 from app.services.oauth_refresh_token_service import OAuthRefreshTokenService
 from app.services.oauth_state_service import OAuthStateService
+from app.tasks.enrichment_tasks import enrich_user_contacts
 from app.utils.security import create_access_token, hash_password, verify_password
 from infrastructure.db.models import User
 from infrastructure.db.repositories import UserRepository
 
 YANDEX_OAUTH_PROVIDER = "yandex"
+
+logger = logging.getLogger(__name__)
+
 
 class YandexOAuthGateway:
     def exchange_code_for_token(self, code: str) -> YandexAccessTokenResponse:
@@ -28,6 +34,7 @@ class AuthService:
         oauth_gateway: YandexOAuthGateway,
         oauth_state_service: OAuthStateService,
         oauth_refresh_token_service: OAuthRefreshTokenService,
+        contact_formatting_service: ContactFormattingService,
         jwt_secret: str,
         jwt_expire_minutes: int,
     ) -> None:
@@ -35,17 +42,40 @@ class AuthService:
         self.oauth_gateway = oauth_gateway
         self.oauth_state_service = oauth_state_service
         self.oauth_refresh_token_service = oauth_refresh_token_service
+        self.contact_formatting_service = contact_formatting_service
         self.jwt_secret = jwt_secret
         self.jwt_expire_minutes = jwt_expire_minutes
 
     def register(self, email: str, phone: str, password: str) -> TokenResponse:
-        if self.user_repository.get_by_email(email):
+        formatting_result = self.contact_formatting_service.format(email=email, phone=phone)
+
+        canonical_email = formatting_result.email.canonical
+        canonical_phone = formatting_result.phone.canonical
+
+        if self.user_repository.get_by_email(canonical_email):
+
             raise BadRequestError("User with this email already exists")
-        if self.user_repository.get_by_phone(phone):
+        if self.user_repository.get_by_phone(canonical_phone):
             raise BadRequestError("User with this phone already exists")
 
         password_hash = hash_password(password)
-        user = self.user_repository.create(email=email, phone=phone, password_hash=password_hash)
+        user = self.user_repository.create(
+            email=canonical_email,
+            email_raw=email,
+            phone=canonical_phone,
+            phone_raw=phone,
+            password_hash=password_hash,
+            contacts_enrichment_status=formatting_result.status,
+            is_staff=False,
+        )
+
+        if formatting_result.is_degraded:
+            logger.warning(
+                "Saved user registration in degraded mode",
+                extra={"email": email, "phone": phone, "user_id": user.id},
+            )
+            enrich_user_contacts.delay(user_id=user.id)
+
         return self._build_token_response(user)
 
     def login(self, email: str, password: str) -> TokenResponse:
@@ -81,8 +111,12 @@ class AuthService:
 
             user = self.user_repository.create(
                 email=oauth_user.email,
+                email_raw=oauth_user.email,
                 phone=generated_phone,
+                phone_raw=generated_phone,
                 password_hash=None,
+                contacts_enrichment_status="formatted",
+                is_staff=False,
             )
 
             user = self.user_repository.attach_oauth_account(

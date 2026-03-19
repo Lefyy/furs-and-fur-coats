@@ -9,10 +9,46 @@ class UserRepository(BaseRepository):
     def __init__(self, session: Session) -> None:
         super().__init__(session)
 
-    def create(self, email: str, phone: str, password_hash: str) -> User:
+    def create(
+        self,
+        email: str,
+        email_raw: str | None,
+        phone: str,
+        phone_raw: str | None,
+        password_hash: str | None,
+        contacts_enrichment_status: str | None,
+        is_staff: bool,
+    ) -> User:
+
         def operation() -> User:
-            user = User(email=email, phone=phone, password_hash=password_hash)
+            user = User(
+                email=email,
+                email_raw=email_raw,
+                phone=phone,
+                phone_raw=phone_raw,
+                password_hash=password_hash,
+                contacts_enrichment_status=contacts_enrichment_status,
+                is_staff=is_staff,
+            )
             self.session.add(user)
+            return user
+        
+        return self.run_in_transaction(operation)
+
+    def update_contact_enrichment(
+        self,
+        user_id: int,
+        email: str,
+        phone: str,
+        contacts_enrichment_status: str,
+    ) -> User:
+        def operation() -> User:
+            user = self.get_by_id(user_id)
+            if user is None:
+                raise ValueError("User not found")
+            user.email = email
+            user.phone = phone
+            user.contacts_enrichment_status = contacts_enrichment_status
             return user
         
         return self.run_in_transaction(operation)
