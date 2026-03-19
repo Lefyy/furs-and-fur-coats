@@ -6,11 +6,13 @@ from infrastructure.db.models.order import Order
 from infrastructure.db.models.order_item import OrderItem
 from infrastructure.db.models.order_status import OrderStatus
 from infrastructure.db.models.product import Product
+from infrastructure.db.models.product_description_generation import ProductDescriptionGeneration
 from infrastructure.db.models.user import User
 
 __all__ = [
     "User",
     "Product",
+    "ProductDescriptionGeneration",
     "Category",
     "OAuthAccount",
     "Cart",

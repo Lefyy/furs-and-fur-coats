@@ -1,4 +1,4 @@
-from sqlalchemy import DateTime, ForeignKey, Integer, Numeric, Text, func
+from sqlalchemy import JSON, DateTime, ForeignKey, Integer, Numeric, String, Text, func
 from sqlalchemy.orm import mapped_column, relationship
 
 from infrastructure.db.models.base import Base
@@ -12,6 +12,10 @@ class Order(Base):
     status_id = mapped_column(ForeignKey("order_statuses.id"), nullable=False, index=True)
     total_price = mapped_column(Numeric(10, 2), nullable=False)
     address = mapped_column(Text, nullable=False)
+    address_raw = mapped_column(Text, nullable=True)
+    postal_code = mapped_column(String(32), nullable=True)
+    address_metadata = mapped_column(JSON, nullable=True)
+    address_enrichment_status = mapped_column(String(32), nullable=True)
     created_at = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     user = relationship("User", back_populates="orders", lazy="selectin")
