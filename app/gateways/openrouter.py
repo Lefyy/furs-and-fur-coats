@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Any
-
 import httpx
 
 from app.config import settings
@@ -13,26 +11,14 @@ class OpenRouterGateway:
         self._base_url = (base_url or settings.openrouter_base_url).rstrip("/")
         self._timeout = timeout or settings.openrouter_timeout
 
-    def generate_product_description(self, *, product_name: str, attributes: dict[str, Any] | None = None) -> str:
+    def generate_product_description(self, *, messages: list[dict[str, str]]) -> str:
         if not self._api_key:
             raise RuntimeError("OpenRouter API key is not configured")
 
         payload = {
             "model": settings.openrouter_model,
             "temperature": settings.openrouter_temperature,
-            "messages": [
-                {
-                    "role": "system",
-                    "content": (
-                        "You create concise and persuasive product descriptions for a fur coat store. "
-                        f"Prompt version: {settings.openrouter_prompt_version}."
-                    ),
-                },
-                {
-                    "role": "user",
-                    "content": self._build_user_prompt(product_name=product_name, attributes=attributes or {}),
-                },
-            ],
+            "messages": messages,
         }
         headers = {
             "Authorization": f"Bearer {self._api_key}",
@@ -58,12 +44,3 @@ class OpenRouterGateway:
             return "".join(text_parts).strip()
 
         raise RuntimeError("OpenRouter returned an unsupported message content type")
-
-    @staticmethod
-    def _build_user_prompt(*, product_name: str, attributes: dict[str, Any]) -> str:
-        serialized_attributes = ", ".join(f"{key}: {value}" for key, value in attributes.items()) or "no extra attributes"
-        return (
-            f"Generate a product description for '{product_name}'. "
-            f"Use the following attributes: {serialized_attributes}. "
-            "Keep it informative, premium, and suitable for an ecommerce product card."
-        )

@@ -2,6 +2,7 @@ from app.schemas.auth_schema import LoginRequest, RegisterRequest, TokenResponse
 from app.schemas.cart_schema import CartItemRequest, CartItemResponse, CartResponse, DeleteCartItemRequest
 from app.schemas.catalog_schema import CategoriesResponse, CategoryNodeResponse, ProductResponse, ProductsListResponse
 from app.schemas.order_schema import OrderCreateRequest, OrderResponse
+from app.schemas.product_description_generation_schema import ProductDescriptionGenerationResponse
 
 
 __all__ = [
@@ -19,4 +20,5 @@ __all__ = [
     "LoginRequest",
     "TokenResponse",
     "UserAuthResponse",
+    "ProductDescriptionGenerationResponse",
 ]
