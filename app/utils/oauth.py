@@ -2,29 +2,20 @@ import httpx
 
 from app.config import settings
 from app.exceptions import UnauthorizedError
-from app.services.auth_service import OAuthGateway, OAuthRequest, OAuthUserInfo
+from app.services.auth_service import YandexOAuthGateway, YandexUserInfo
 
 
-class HttpOAuthGateway(OAuthGateway):
-    def fetch_user_info(self, request: OAuthRequest) -> OAuthUserInfo:
-        code = self._require(request.code, "Missing code for Yandex")
-        token_payload = {
-            "grant_type": "authorization_code",
-            "code": code,
-            "client_id": self._require(settings.yandex_client_id, "Missing Yandex client_id"),
-            "client_secret": self._require(settings.yandex_client_secret, "Missing Yandex client_secret"),
-        }
-        if request.device_id:
-            token_payload["device_id"] = request.device_id
-        if request.device_name:
-            token_payload["device_name"] = request.device_name
-        if request.code_verifier:
-            token_payload["code_verifier"] = request.code_verifier
-
+class HttpOAuthGateway(YandexOAuthGateway):
+    def fetch_user_info(self, code: str) -> YandexUserInfo:
         token_data = self._post_form(
             settings.yandex_token_url,
-            data=token_payload,
-            error_message="Failed Yandex OAuth token request"
+            data={
+                "grant_type": "authorization_code",
+                "code": code,
+                "client_id": self._require(settings.yandex_client_id, "Missing Yandex client_id"),
+                "client_secret": self._require(settings.yandex_client_secret, "Missing Yandex client_secret"),
+            },
+            error_message="Failed Yandex OAuth token request",
         )
 
         access_token = token_data.get("access_token")
@@ -33,7 +24,7 @@ class HttpOAuthGateway(OAuthGateway):
 
         profile = self._get_json(
             settings.yandex_user_info_url,
-            headers={"Authorization": f"Bearer {access_token}"},
+            headers={"Authorization": f"OAuth {access_token}"},
             params={"format": "json"},
             error_message="Failed to fetch Yandex user info"
         )
@@ -49,13 +40,7 @@ class HttpOAuthGateway(OAuthGateway):
         if not subject:
             raise UnauthorizedError("Invalid Yandex profile")
 
-        return OAuthUserInfo(
-            provider="yandex",
-            subject=subject,
-            email=email,
-            phone=phone,
-            refresh_token=token_data.get("refresh_token"),
-        )
+        return YandexUserInfo(subject=subject, email=email, phone=phone)
 
     @staticmethod
     def _post_form(url: str, data: dict[str, str], error_message: str) -> dict:

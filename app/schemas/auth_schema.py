@@ -18,6 +18,17 @@ class UserAuthResponse(BaseModel):
     phone: str
 
 
+class YandexUserInfo(BaseModel):
+    subject: str
+    email: str | None
+    phone: str | None = None
+
+
+class YandexOAuthRequest(BaseModel):
+    code: str
+    state: str
+
+
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"

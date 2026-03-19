@@ -28,8 +28,6 @@ class Settings:
     yandex_token_url = os.getenv("YANDEX_TOKEN_URL", "https://oauth.yandex.ru/token")
     yandex_user_info_url = os.getenv("YANDEX_USER_INFO_URL", "https://login.yandex.ru/info")
 
-    oauth_refresh_token_ttl_seconds = int(os.getenv("OAUTH_REFRESH_TOKEN_TTL_SECONDS", str(60 * 60 * 24 * 30)))
-
 
 
 settings = Settings()

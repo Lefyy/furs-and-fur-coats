@@ -5,8 +5,8 @@ from fastapi.responses import RedirectResponse
 
 from app.config import settings
 from app.routers.dependencies import get_auth_service
-from app.schemas.auth_schema import LoginRequest, RegisterRequest, TokenResponse
-from app.services.auth_service import AuthService, OAuthRequest
+from app.schemas.auth_schema import LoginRequest, RegisterRequest, TokenResponse, YandexOAuthRequest
+from app.services.auth_service import AuthService
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -36,11 +36,4 @@ def yandex_login(service: AuthService = Depends(get_auth_service)) -> RedirectRe
 
 @router.get("/yandex/callback", response_model=TokenResponse)
 def yandex_callback(code: str, state: str, service: AuthService = Depends(get_auth_service)) -> TokenResponse:
-    return service.oauth_login(
-        request=OAuthRequest(
-            provider="yandex",
-            code=code,
-            redirect_uri=settings.yandex_client_redirect_uri,
-            state=state,
-        )
-    )
+    return service.yandex_login(request=YandexOAuthRequest(code=code, state=state))
