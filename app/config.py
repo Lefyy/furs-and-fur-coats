@@ -24,14 +24,9 @@ class Settings:
     yandex_client_id = os.getenv("YANDEX_CLIENT_ID", "")
     yandex_client_secret = os.getenv("YANDEX_CLIENT_SECRET", "")
     yandex_client_redirect_uri = os.getenv("YANDEX_REDIRECT_URI", "")
+    yandex_auth_url = os.getenv("YANDEX_AUTH_URL", "https://oauth.yandex.ru/authorize")
     yandex_token_url = os.getenv("YANDEX_TOKEN_URL", "https://oauth.yandex.ru/token")
     yandex_user_info_url = os.getenv("YANDEX_USER_INFO_URL", "https://login.yandex.ru/info")
-
-    vk_client_id = os.getenv("VK_CLIENT_ID", "")
-    vk_client_secret = os.getenv("VK_CLIENT_SECRET", "")
-    vk_client_redirect_uri = os.getenv("VK_REDIRECT_URI", "")
-    vk_token_url = os.getenv("VK_TOKEN_URL", "https://id.vk.com/oauth2/auth")
-    vk_user_info_url = os.getenv("VK_USER_INFO_URL", "https://id.vk.com/oauth2/public_info")
 
     oauth_refresh_token_ttl_seconds = int(os.getenv("OAUTH_REFRESH_TOKEN_TTL_SECONDS", str(60 * 60 * 24 * 30)))
 

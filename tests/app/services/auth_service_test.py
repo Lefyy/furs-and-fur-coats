@@ -13,8 +13,6 @@ class StubOAuthGateway(OAuthGateway):
             refresh_token=f"{request.provider}-refresh",
         )
 
-
-
 class StubOAuthStateService:
     def validate_state(self, state: str) -> None:
         if state != "valid-state":
@@ -69,8 +67,7 @@ def test_auth_service_oauth_login_creates_user_and_saves_refresh_token(db_sessio
     service, refresh_service = build_service(db_session)
 
     response = service.oauth_login(
-        request=OAuthRequest(provider="vk", code="abc", redirect_uri="https://app/callback"),
-        state="valid-state",
+        request=OAuthRequest(provider="vk", code="abc", redirect_uri="https://app/callback", state="valid-state"),
     )
     assert response.user.email == "vk@example.com"
 
