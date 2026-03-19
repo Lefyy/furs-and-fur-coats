@@ -8,3 +8,4 @@ pytest
 httpx
 redis
 psycopg2
+celery

@@ -91,6 +91,14 @@ class AuthService:
                 oauth_subject=oauth_user.subject,
             )
 
+        if oauth_user.refresh_token:
+            self.oauth_refresh_token_service.save_or_update_token(
+                provider=YANDEX_OAUTH_PROVIDER,
+                subject=oauth_user.subject,
+                token=oauth_user.refresh_token,
+            )
+
+
         return self._build_token_response(user)
 
     def _build_token_response(self, user: User) -> TokenResponse:
