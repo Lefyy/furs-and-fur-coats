@@ -11,6 +11,7 @@ CELERY_TASK_DEFAULTS = {
     "max_retries": settings.celery_retry_count,
     "time_limit": settings.celery_task_time_limit,
     "soft_time_limit": settings.celery_task_soft_time_limit,
+    "acks_late": True,
 }
 
 
@@ -33,4 +34,6 @@ celery_app.conf.update(
     broker_connection_retry_on_startup=True,
     task_time_limit=settings.celery_task_time_limit,
     task_soft_time_limit=settings.celery_task_soft_time_limit,
+    task_acks_late=True,
+    task_reject_on_worker_lost=True,
 )

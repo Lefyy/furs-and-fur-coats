@@ -14,6 +14,9 @@ class OpenRouterGateway:
         self._timeout = timeout or settings.openrouter_timeout
 
     def generate_product_description(self, *, product_name: str, attributes: dict[str, Any] | None = None) -> str:
+        if not self._api_key:
+            raise RuntimeError("OpenRouter API key is not configured")
+
         payload = {
             "model": settings.openrouter_model,
             "temperature": settings.openrouter_temperature,
@@ -34,7 +37,7 @@ class OpenRouterGateway:
         headers = {
             "Authorization": f"Bearer {self._api_key}",
             "HTTP-Referer": settings.openrouter_referer,
-            "X-Title": settings.openrouter_title,
+            "X-OpenRouter-Title": settings.openrouter_title,
             "Content-Type": "application/json",
         }
         with httpx.Client(timeout=self._timeout) as client:
@@ -43,9 +46,18 @@ class OpenRouterGateway:
             data = response.json()
 
         try:
-            return data["choices"][0]["message"]["content"].strip()
+            content = data["choices"][0]["message"]["content"]
         except (KeyError, IndexError, TypeError) as exc:
             raise RuntimeError("OpenRouter returned an unexpected response payload") from exc
+
+        if isinstance(content, str):
+            return content.strip()
+
+        if isinstance(content, list):
+            text_parts = [part.get("text", "") for part in content if isinstance(part, dict)]
+            return "".join(text_parts).strip()
+
+        raise RuntimeError("OpenRouter returned an unsupported message content type")
 
     @staticmethod
     def _build_user_prompt(*, product_name: str, attributes: dict[str, Any]) -> str:
