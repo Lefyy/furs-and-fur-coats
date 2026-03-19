@@ -1,8 +1,8 @@
-from dataclasses import dataclass
 import hashlib
 
 from app.exceptions import BadRequestError, UnauthorizedError
-from app.schemas.auth_schema import TokenResponse, UserAuthResponse, YandexUserInfo, YandexOAuthRequest
+from app.schemas.auth_schema import TokenResponse, UserAuthResponse, YandexAccessTokenResponse, YandexUserInfo, YandexOAuthRequest
+from app.services.oauth_refresh_token_service import OAuthRefreshTokenService
 from app.services.oauth_state_service import OAuthStateService
 from app.utils.security import create_access_token, hash_password, verify_password
 from infrastructure.db.models import User
@@ -11,6 +11,12 @@ from infrastructure.db.repositories import UserRepository
 YANDEX_OAUTH_PROVIDER = "yandex"
 
 class YandexOAuthGateway:
+    def exchange_code_for_token(self, code: str) -> YandexAccessTokenResponse:
+        raise NotImplementedError
+
+    def get_user_data(self, access_token: YandexAccessTokenResponse) -> dict:
+        raise NotImplementedError
+    
     def fetch_user_info(self, code: str) -> YandexUserInfo:
         raise NotImplementedError
 
@@ -21,12 +27,14 @@ class AuthService:
         user_repository: UserRepository,
         oauth_gateway: YandexOAuthGateway,
         oauth_state_service: OAuthStateService,
+        oauth_refresh_token_service: OAuthRefreshTokenService,
         jwt_secret: str,
         jwt_expire_minutes: int,
     ) -> None:
         self.user_repository = user_repository
         self.oauth_gateway = oauth_gateway
         self.oauth_state_service = oauth_state_service
+        self.oauth_refresh_token_service = oauth_refresh_token_service
         self.jwt_secret = jwt_secret
         self.jwt_expire_minutes = jwt_expire_minutes
 

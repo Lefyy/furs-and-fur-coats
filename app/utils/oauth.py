@@ -2,12 +2,12 @@ import httpx
 
 from app.config import settings
 from app.exceptions import UnauthorizedError
-from app.services.auth_service import YandexOAuthGateway, YandexUserInfo
+from app.services.auth_service import YandexOAuthGateway, YandexUserInfo, YandexAccessTokenResponse
 
 
 class HttpOAuthGateway(YandexOAuthGateway):
-    def fetch_user_info(self, code: str) -> YandexUserInfo:
-        token_data = self._post_form(
+    def exchange_code_for_token(self, code: str) -> YandexAccessTokenResponse:
+        payload = self._post_form(
             settings.yandex_token_url,
             data={
                 "grant_type": "authorization_code",
@@ -18,29 +18,32 @@ class HttpOAuthGateway(YandexOAuthGateway):
             error_message="Failed Yandex OAuth token request",
         )
 
-        access_token = token_data.get("access_token")
+        access_token = payload.get("access_token")
         if not access_token:
             raise UnauthorizedError("No access token from Yandex")
 
-        profile = self._get_json(
+        return YandexAccessTokenResponse(access_token=access_token, refresh_token=payload.get("refresh_token"))
+
+    def get_user_data(self, access_token: YandexAccessTokenResponse) -> dict:
+        return self._get_json(
             settings.yandex_user_info_url,
-            headers={"Authorization": f"OAuth {access_token}"},
+            headers={"Authorization": f"OAuth {access_token.access_token}"},
             params={"format": "json"},
-            error_message="Failed to fetch Yandex user info"
+            error_message="Failed to fetch Yandex user info",
         )
 
-        subject = str(profile.get("sub") or profile.get("id") or "")
-        email = profile.get("email") or profile.get("default_email")
-        phone = None
-        if isinstance(profile.get("default_phone"), dict):
-            phone = profile["default_phone"].get("number")
-        elif isinstance(profile.get("phone_number"), str):
-            phone = profile.get("phone_number")
+    def fetch_user_info(self, code: str) -> YandexUserInfo:
+        access_token = self.exchange_code_for_token(code=code)
+        user_data = self.get_user_data(access_token=access_token)
+
+        subject = str(user_data["id"])
+        email = user_data.get("default_email")
+        phone = user_data.get("default_phone", {}).get("number")
 
         if not subject:
             raise UnauthorizedError("Invalid Yandex profile")
 
-        return YandexUserInfo(subject=subject, email=email, phone=phone)
+        return YandexUserInfo(subject=subject, email=email, phone=phone, refresh_token=access_token.refresh_token)
 
     @staticmethod
     def _post_form(url: str, data: dict[str, str], error_message: str) -> dict:

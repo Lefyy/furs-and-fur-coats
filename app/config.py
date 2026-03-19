@@ -20,6 +20,7 @@ class Settings:
 
     jwt_secret_key = os.getenv("JWT_SECRET_KEY", "dev-secret")
     jwt_expire_minutes = int(os.getenv("JWT_EXPIRE_MINUTES", "60"))
+    oauth_refresh_token_ttl_seconds = int(os.getenv("OAUTH_REFRESH_TOKEN_TTL_SECONDS", str(60 * 60 * 24 * 30)))
 
     yandex_client_id = os.getenv("YANDEX_CLIENT_ID", "")
     yandex_client_secret = os.getenv("YANDEX_CLIENT_SECRET", "")

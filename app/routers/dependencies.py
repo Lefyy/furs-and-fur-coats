@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.config import settings
 from app.services import CartService, CatalogService, OrderService
 from app.services.auth_service import AuthService
+from app.services.oauth_refresh_token_service import OAuthRefreshTokenService
 from app.services.oauth_state_service import OAuthStateService
 from app.utils.oauth import HttpOAuthGateway
 from infrastructure.db.db_session import get_db_session
@@ -33,6 +34,7 @@ def get_auth_service(session: Session = Depends(get_db_session)) -> AuthService:
         user_repository=UserRepository(session=session),
         oauth_gateway=HttpOAuthGateway(),
         oauth_state_service=OAuthStateService(),
+        oauth_refresh_token_service=OAuthRefreshTokenService(ttl_seconds=settings.oauth_refresh_token_ttl_seconds),
         jwt_secret=settings.jwt_secret_key,
         jwt_expire_minutes=settings.jwt_expire_minutes,
     )
