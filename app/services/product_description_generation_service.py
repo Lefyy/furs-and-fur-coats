@@ -2,12 +2,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Any
 
 from app.config import settings
 from app.exceptions import BadRequestError, NotFoundError
 from app.gateways.openrouter import OpenRouterGateway
-from app.utils.product_description_prompt import build_product_description_messages
+from app.utils.product_description_prompt import ProductPromptContext, build_product_description_messages
 from infrastructure.db.models import Category, Product, ProductDescriptionGeneration
 from infrastructure.db.repositories import ProductRepository
 from infrastructure.db.repositories.product_description_generation_repository import ProductDescriptionGenerationRepository
@@ -63,7 +62,7 @@ class ProductDescriptionGenerationService:
         generated_text = self.openrouter_gateway.generate_product_description(
             messages=build_product_description_messages(
                 product_name=product.name,
-                attributes=self._build_prompt_attributes(product),
+                context=self._build_prompt_context(product),
             )
         )
 
@@ -110,7 +109,7 @@ class ProductDescriptionGenerationService:
         return product
 
     @staticmethod
-    def _serialize_price(price: Decimal | Any) -> str | None:
+    def _serialize_price(price: Decimal | object) -> str | None:
         if isinstance(price, Decimal):
             return format(price, "f")
         return str(price) if price is not None else None
@@ -129,25 +128,34 @@ class ProductDescriptionGenerationService:
             current = current.parent
 
         return list(reversed(path))
+    
+    @staticmethod
+    def _serialize_prompt_list(values: object) -> list[str] | None:
+        if not isinstance(values, list):
+            return None if values is None else [str(values)]
+
+        serialized_values = [str(value) for value in values if value not in (None, "")]
+        return serialized_values or None
 
     @classmethod
-    def _build_prompt_attributes(cls, product: Product) -> dict[str, Any]:
+    def _build_prompt_context(cls, product: Product) -> ProductPromptContext:
         category_path = cls._build_category_path(product.category)
         parent_category_name = category_path[-2] if len(category_path) > 1 else None
 
-        return {
-            "brand": product.brand,
-            "fur_type": product.fur_type,
-            "color": product.color,
-            "length": product.length,
-            "size_range": product.size_range,
-            "features": product.features,
-            "material_composition": product.material_composition,
-            "target_audience": product.target_audience,
-            "season": product.season,
-            "style_tags": product.style_tags,
-            "price": cls._serialize_price(product.price),
-            "category_name": product.category.name if product.category is not None else None,
-            "parent_category_name": parent_category_name,
-            "category_path": " → ".join(category_path) if category_path else None,
-        }
+        return ProductPromptContext(
+            brand=product.brand,
+            fur_type=product.fur_type,
+            color=product.color,
+            length=product.length,
+            size_range=product.size_range,
+            features=cls._serialize_prompt_list(product.features),
+            material_composition=product.material_composition,
+            target_audience=product.target_audience,
+            season=product.season,
+            style_tags=cls._serialize_prompt_list(product.style_tags),
+            price=cls._serialize_price(product.price),
+            category_name=product.category.name if product.category is not None else None,
+            parent_category_name=parent_category_name,
+            category_path=category_path or None,
+        )
+
