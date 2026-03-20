@@ -96,52 +96,71 @@ class AuthService:
         self.oauth_state_service.validate_state(request.state)
 
         oauth_user = self.oauth_gateway.fetch_user_info(code=request.code)
+        user = self._get_or_create_oauth_user(oauth_user)
+        self._save_refresh_token_if_present(oauth_user)
 
+        return self._build_token_response(user)
+
+    def _get_or_create_oauth_user(self, oauth_user: YandexUserInfo) -> User:
+        user = self._find_user_for_oauth_login(oauth_user)
+        if user is not None:
+            return user
+        return self._create_oauth_user(oauth_user)
+
+    def _find_user_for_oauth_login(self, oauth_user: YandexUserInfo) -> User | None:
         user = self.user_repository.get_by_oauth(
             provider=YANDEX_OAUTH_PROVIDER,
             oauth_subject=oauth_user.subject,
         )
 
-        if user is None and oauth_user.email:
-            user = self.user_repository.get_by_email(oauth_user.email)
-            if user:
-                user = self.user_repository.attach_oauth_account(
-                    user_id=user.id,
-                    provider=YANDEX_OAUTH_PROVIDER,
-                    oauth_subject=oauth_user.subject,
-                )
+        if user is not None:
+            return user
 
+        if not oauth_user.email:
+            return None
+
+        user = self.user_repository.get_by_email(oauth_user.email)
         if user is None:
-            generated_phone = oauth_user.phone or self._build_oauth_phone(subject=oauth_user.subject)
+            return None
 
-            if self.user_repository.get_by_phone(generated_phone):
-                generated_phone = self._build_oauth_phone(subject=f"{oauth_user.subject}-alt")
+        return self._attach_yandex_account(user=user, subject=oauth_user.subject)
 
-            user = self.user_repository.create(
-                email=oauth_user.email,
-                email_raw=oauth_user.email,
-                phone=generated_phone,
-                phone_raw=generated_phone,
-                password_hash=None,
-                contacts_enrichment_status="formatted",
-                is_staff=False,
-            )
+    def _attach_yandex_account(self, user: User, subject: str) -> User:
+        return self.user_repository.attach_oauth_account(
+            user_id=user.id,
+            provider=YANDEX_OAUTH_PROVIDER,
+            oauth_subject=subject,
+        )
 
-            user = self.user_repository.attach_oauth_account(
-                user_id=user.id,
-                provider=YANDEX_OAUTH_PROVIDER,
-                oauth_subject=oauth_user.subject,
-            )
+    def _create_oauth_user(self, oauth_user: YandexUserInfo) -> User:
+        generated_phone = oauth_user.phone or self._build_unique_oauth_phone(subject=oauth_user.subject)
+        user = self.user_repository.create(
+            email=oauth_user.email,
+            email_raw=oauth_user.email,
+            phone=generated_phone,
+            phone_raw=generated_phone,
+            password_hash=None,
+            contacts_enrichment_status="formatted",
+            is_staff=False,
+        )
 
-        if oauth_user.refresh_token:
-            self.oauth_refresh_token_service.save_or_update_token(
-                provider=YANDEX_OAUTH_PROVIDER,
-                subject=oauth_user.subject,
-                token=oauth_user.refresh_token,
-            )
+        return self._attach_yandex_account(user=user, subject=oauth_user.subject)
 
+    def _build_unique_oauth_phone(self, subject: str) -> str:
+        generated_phone = self._build_oauth_phone(subject=subject)
+        if self.user_repository.get_by_phone(generated_phone):
+            return self._build_oauth_phone(subject=f"{subject}-alt")
+        return generated_phone
 
-        return self._build_token_response(user)
+    def _save_refresh_token_if_present(self, oauth_user: YandexUserInfo) -> None:
+        if not oauth_user.refresh_token:
+            return
+
+        self.oauth_refresh_token_service.save_or_update_token(
+            provider=YANDEX_OAUTH_PROVIDER,
+            subject=oauth_user.subject,
+            token=oauth_user.refresh_token,
+        )
 
     def _build_token_response(self, user: User) -> TokenResponse:
         token = create_access_token(
