@@ -9,7 +9,7 @@ class StubAddressFormattingService:
     def __init__(self, *, degraded: bool = False) -> None:
         self.degraded = degraded
 
-def format(self, *, address: str) -> AddressFormattingResult:
+    def format(self, *, address: str) -> AddressFormattingResult:
         if self.degraded:
             return AddressFormattingResult(
                 raw=address,

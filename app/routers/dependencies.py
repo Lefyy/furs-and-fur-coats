@@ -23,7 +23,7 @@ from infrastructure.db.repositories import CartRepository, CategoryRepository, O
 from infrastructure.db.repositories.product_description_generation_repository import ProductDescriptionGenerationRepository
 
 
-security = HTTPBearer()
+security = HTTPBearer(auto_error=False)
 
 
 def get_user_repository(session: Session = Depends(get_db_session)) -> UserRepository:
@@ -31,9 +31,21 @@ def get_user_repository(session: Session = Depends(get_db_session)) -> UserRepos
 
 
 def get_current_user_id(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
+    credentials: HTTPAuthorizationCredentials | None = Depends(security),
+    authorization: str | None = Header(default=None),
 ) -> int:
-    token = credentials.credentials
+    token: str | None = None
+
+    if isinstance(credentials, HTTPAuthorizationCredentials):
+        token = credentials.credentials
+    elif authorization:
+        scheme, _, value = authorization.partition(" ")
+        if scheme.lower() != "bearer" or not value:
+            raise UnauthorizedError("Invalid token")
+        token = value
+
+    if token is None:
+        raise UnauthorizedError("Invalid token")
     payload = decode_access_token(token=token, secret_key=settings.jwt_secret_key)
 
     subject = payload.get("sub")

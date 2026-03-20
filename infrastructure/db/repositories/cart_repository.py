@@ -27,6 +27,7 @@ class CartRepository(BaseRepository):
 
         cart = Cart(user_id=user_id)
         self.session.add(cart)
+        self.session.flush([cart])
         return cart
 
     def get_or_create_for_user(self, user_id: int) -> Cart:
