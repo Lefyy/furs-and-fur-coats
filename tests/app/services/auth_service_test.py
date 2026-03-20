@@ -6,14 +6,17 @@ from infrastructure.db.repositories import UserRepository
 
 
 class StubYandexOAuthGateway:
-    def fetch_user_info(self, code: str):
-
-        return YandexUserInfo(
+    def __init__(self, user_info: YandexUserInfo | None = None) -> None:
+        self.user_info = user_info or YandexUserInfo(
             subject="yandex-sub",
             email="yandex@example.com",
             phone="79990000000",
             refresh_token="refresh-token",
         )
+
+    def fetch_user_info(self, code: str):
+        return self.user_info
+    
 
 class StubOAuthStateService:
     def validate_state(self, state: str) -> None:
@@ -24,6 +27,11 @@ class StubOAuthStateService:
 class StubOAuthRefreshTokenService:
     def __init__(self) -> None:
         self.storage: dict[str, str] = {}
+
+    def save_if_present(self, *, provider: str, subject: str, token: str | None) -> None:
+        if not token:
+            return
+        self.save_or_update_token(provider=provider, subject=subject, token=token)
 
     def save_or_update_token(self, provider: str, subject: str, token: str) -> None:
         self.storage[f"{provider}:{subject}"] = token
@@ -49,11 +57,16 @@ class StubContactFormattingService:
         )
 
 
-def build_service(db_session, *, degraded: bool = False) -> tuple[AuthService, StubOAuthRefreshTokenService]:
+def build_service(
+    db_session,
+    *,
+    degraded: bool = False,
+    oauth_user: YandexUserInfo | None = None,
+) -> tuple[AuthService, StubOAuthRefreshTokenService]:
     refresh_service = StubOAuthRefreshTokenService()
     service = AuthService(
         user_repository=UserRepository(db_session),
-        oauth_gateway=StubYandexOAuthGateway(),
+        oauth_gateway=StubYandexOAuthGateway(user_info=oauth_user),
         oauth_state_service=StubOAuthStateService(),
         oauth_refresh_token_service=refresh_service,
         contact_formatting_service=StubContactFormattingService(degraded=degraded),
@@ -122,3 +135,13 @@ def test_auth_service_oauth_login_creates_user_and_saves_refresh_token(db_sessio
     assert linked_user.id == response.user.id
     assert linked_user.is_staff is False
     assert refresh_service.storage["yandex:yandex-sub"] == "refresh-token"
+
+
+def test_auth_service_oauth_login_builds_fallback_phone_when_missing(db_session):
+    oauth_user = YandexUserInfo(subject="missing-phone-sub", email="no-phone@example.com", phone=None, refresh_token=None)
+    service, refresh_service = build_service(db_session, oauth_user=oauth_user)
+
+    response = service.yandex_login(request=type("Req", (), {"code": "abc", "state": "valid-state"})())
+
+    assert response.user.phone.startswith("oauth_")
+    assert refresh_service.storage == {}

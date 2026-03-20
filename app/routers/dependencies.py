@@ -6,12 +6,14 @@ from app.exceptions import ForbiddenError, UnauthorizedError
 from app.gateways.dadata import DadataGateway
 from app.gateways.openrouter import OpenRouterGateway
 from app.services import CartService, CatalogService, OrderService
-from app.services.product_description_generation_service import ProductDescriptionGenerationService
 from app.services.address_formatting_service import AddressFormattingService
 from app.services.auth_service import AuthService
+from app.services.auth_token_factory import AuthTokenFactory
 from app.services.contact_formatting_service import ContactFormattingService
+from app.services.oauth_identity_policy import OAuthIdentityPolicy
 from app.services.oauth_refresh_token_service import OAuthRefreshTokenService
 from app.services.oauth_state_service import OAuthStateService
+from app.services.product_description_generation_service import ProductDescriptionGenerationService
 from app.utils.oauth import HttpOAuthGateway
 from app.utils.security import decode_access_token
 from infrastructure.db.db_session import get_db_session
@@ -72,15 +74,21 @@ def get_order_service(session: Session = Depends(get_db_session)) -> OrderServic
 
 
 def get_auth_service(session: Session = Depends(get_db_session)) -> AuthService:
+    user_repository = get_user_repository(session=session)
     dadata_gateway = DadataGateway()
     return AuthService(
-        user_repository=get_user_repository(session=session),
+        user_repository=user_repository,
         oauth_gateway=HttpOAuthGateway(),
         oauth_state_service=OAuthStateService(),
         oauth_refresh_token_service=OAuthRefreshTokenService(ttl_seconds=settings.oauth_refresh_token_ttl_seconds),
         contact_formatting_service=ContactFormattingService(dadata_gateway=dadata_gateway),
         jwt_secret=settings.jwt_secret_key,
         jwt_expire_minutes=settings.jwt_expire_minutes,
+        oauth_identity_policy=OAuthIdentityPolicy(user_repository=user_repository),
+        auth_token_factory=AuthTokenFactory(
+            jwt_secret=settings.jwt_secret_key,
+            jwt_expire_minutes=settings.jwt_expire_minutes,
+        ),
     )
 
 
