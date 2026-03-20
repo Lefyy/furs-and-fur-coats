@@ -1,0 +1,62 @@
+from decimal import Decimal
+
+from app.services.product_description_generation_service import ProductDescriptionGenerationService
+from app.utils.product_description_prompt import (
+    _build_attribute_lines,
+    _is_empty_prompt_value,
+    _serialize_prompt_value,
+    build_product_description_messages,
+)
+
+
+def test_is_empty_prompt_value_supports_blank_variants():
+    assert _is_empty_prompt_value(None) is True
+    assert _is_empty_prompt_value("") is True
+    assert _is_empty_prompt_value([]) is True
+    assert _is_empty_prompt_value({}) is True
+    assert _is_empty_prompt_value(0) is False
+
+
+def test_serialize_prompt_value_supports_lists_and_scalars():
+    assert _serialize_prompt_value(["hood", Decimal("99.90")]) == "hood, 99.90"
+    assert _serialize_prompt_value(Decimal("10.50")) == "10.50"
+
+
+def test_build_attribute_lines_skips_empty_values_and_serializes_lists():
+    lines = _build_attribute_lines(
+        {
+            "brand": "FurHouse",
+            "features": ["hood", "belt"],
+            "style_tags": [],
+            "price": "100.00",
+            "category_id": None,
+        }
+    )
+
+    assert lines == [
+        "- Бренд: FurHouse",
+        "- Особенности: hood, belt",
+        "- Цена: 100.00",
+    ]
+
+
+def test_build_product_description_messages_uses_fallback_when_no_attributes():
+    messages = build_product_description_messages(product_name="Шуба", attributes={})
+
+    assert messages == [
+        {
+            "role": "user",
+            "content": "Название товара: Шуба\n"
+            "Атрибуты товара:\n"
+            "- Дополнительные атрибуты не указаны\n\n"
+            "Напишите одно готовое к публикации описание товара на русском языке. "
+            "Опирайтесь только на переданные атрибуты, не добавляйте вымышленные свойства и упоминайте "
+            "только наблюдаемые или явно указанные характеристики товара.",
+        }
+    ]
+
+
+def test_serialize_price_formats_decimal_and_other_values():
+    assert ProductDescriptionGenerationService._serialize_price(Decimal("100.00")) == "100.00"
+    assert ProductDescriptionGenerationService._serialize_price(100) == "100"
+    assert ProductDescriptionGenerationService._serialize_price(None) is None
