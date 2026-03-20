@@ -110,13 +110,13 @@ class ProductDescriptionGenerationService:
         return product
 
     @staticmethod
-    def _build_prompt_attributes(product: Product) -> dict[str, Any]:
-        price: str | None
-        if isinstance(product.price, Decimal):
-            price = format(product.price, "f")
-        else:
-            price = str(product.price) if product.price is not None else None
+    def _serialize_price(price: Decimal | Any) -> str | None:
+        if isinstance(price, Decimal):
+            return format(price, "f")
+        return str(price) if price is not None else None
 
+    @classmethod
+    def _build_prompt_attributes(cls, product: Product) -> dict[str, Any]:
         return {
             "brand": product.brand,
             "fur_type": product.fur_type,
@@ -128,6 +128,6 @@ class ProductDescriptionGenerationService:
             "target_audience": product.target_audience,
             "season": product.season,
             "style_tags": product.style_tags,
-            "price": price,
+            "price": cls._serialize_price(product.price),
             "category_id": product.category_id,
         }

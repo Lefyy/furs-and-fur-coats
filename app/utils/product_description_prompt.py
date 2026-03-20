@@ -2,7 +2,12 @@ from __future__ import annotations
 
 from typing import Any
 
-PROMPT_VERSION = "v1"
+_NO_ATTRIBUTES_LINE = "- Дополнительные атрибуты не указаны"
+_DESCRIPTION_INSTRUCTION = (
+    "Напишите одно готовое к публикации описание товара на русском языке. "
+    "Опирайтесь только на переданные атрибуты, не добавляйте вымышленные свойства и "
+    "упоминайте только наблюдаемые или явно указанные характеристики товара."
+)
 
 
 ATTRIBUTE_LABELS = {
@@ -40,19 +45,18 @@ def _build_attribute_lines(attributes: dict[str, Any]) -> list[str]:
         attribute_lines.append(f"- {label}: {serialized}")
 
     if not attribute_lines:
-        return ["- Дополнительные атрибуты не указаны"]
+        return [_NO_ATTRIBUTES_LINE]
     return attribute_lines
 
 
 def _build_user_prompt(*, product_name: str, attribute_lines: list[str]) -> str:
+    attributes_block = "\n".join(attribute_lines)
     return (
 
         f"Название товара: {product_name}\n"
         "Атрибуты товара:\n"
-        f"{chr(10).join(attribute_lines)}\n\n"
-        "Напишите одно готовое к публикации описание товара на русском языке. "
-        "Опирайтесь только на переданные атрибуты, не добавляйте вымышленные свойства и упоминайте "
-        "только наблюдаемые или явно указанные характеристики товара."
+        f"{attributes_block}\n\n"
+        f"{_DESCRIPTION_INSTRUCTION}"
     )
 
 def build_product_description_messages(*, product_name: str, attributes: dict[str, Any]) -> list[dict[str, str]]:
