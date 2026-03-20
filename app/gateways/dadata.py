@@ -2,14 +2,14 @@ from __future__ import annotations
 
 import time
 from typing import Any
+from dadata import Dadata
 
-import httpx
+import json
 
 from app.config import settings
 
 
 class DadataGateway:
-    BASE_URL = "https://cleaner.dadata.ru/api/v1/clean"
 
     def __init__(self, *, api_key: str | None = None, secret_key: str | None = None, timeout: float | None = None) -> None:
         self._api_key = api_key or settings.dadata_api_key
@@ -23,29 +23,16 @@ class DadataGateway:
         if len(structure) != len(record):
             raise ValueError("Dadata structure and record must have the same length")
 
-        payload = {
-            "structure": structure,
-            "data": [record],
-        }
-
-        last_error: Exception | None = None
         for attempt in range(settings.dadata_retry_count + 1):
-            try:
-                with httpx.Client(timeout=self._timeout) as client:
-                    response = client.post(
-                        self.BASE_URL,
-                        headers=self._headers,
-                        json=payload,
-                    )
-                    response.raise_for_status()
-                    return response.json()
-            except httpx.HTTPError as exc:
-                last_error = exc
-                if attempt >= settings.dadata_retry_count:
-                    break
-                time.sleep(settings.dadata_retry_delay)
+            with Dadata(token=self._api_key, secret=self._secret_key, timeout=self._timeout) as dadata:
+                response = dadata.clean_record(structure=structure, record=record)
+                return json.dumps(response)
+            
+            if attempt >= settings.dadata_retry_count:
+                break
+            time.sleep(settings.dadata_retry_delay)
 
-        raise RuntimeError("Dadata clean_record request failed") from last_error
+        raise RuntimeError("Dadata clean_record request failed")
 
     def clean_contact_record(self, *, email: str = "", phone: str = "", address: str = "") -> dict[str, dict[str, Any]]:
         structure: list[str] = []

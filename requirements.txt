@@ -9,3 +9,4 @@ httpx
 redis
 psycopg2
 celery
+dadata
