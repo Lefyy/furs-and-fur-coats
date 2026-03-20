@@ -18,6 +18,12 @@ class OrderRepository(BaseRepository):
             .options(joinedload(Order.items), joinedload(Order.status))
         )
         return self.session.scalar(stmt)
+    
+    def get_required_by_id(self, order_id: int) -> Order:
+        order = self.get_by_id(order_id=order_id)
+        if order is None:
+            raise ValueError("Order not found")
+        return order
 
     def get_status_by_name(self, name: str) -> OrderStatus | None:
         stmt = select(OrderStatus).where(OrderStatus.name == name)
@@ -81,7 +87,8 @@ class OrderRepository(BaseRepository):
                 )
 
             self.session.query(CartItem).filter(CartItem.cart_id == cart.id).delete(synchronize_session=False)
-            return order
+            self.flush()
+            return self.get_required_by_id(order_id=order.id)
 
         order = self.run_in_transaction(operation)
         if cart is not None:
@@ -97,9 +104,7 @@ class OrderRepository(BaseRepository):
         address_enrichment_status: str,
     ) -> Order:
         def operation() -> Order:
-            order = self.get_by_id(order_id)
-            if order is None:
-                raise ValueError("Order not found")
+            order = self.get_required_by_id(order_id)
             order.address = address
             order.postal_code = postal_code
             order.address_metadata = address_metadata
