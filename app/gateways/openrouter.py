@@ -30,7 +30,7 @@ class OpenRouterGateway:
             "Content-Type": "application/json",
         }
         with httpx.Client(timeout=self._timeout) as client:
-            response = client.post(f"{self._base_url}/chat/completions", json=payload, headers=headers)
+            response = client.post(f"{self._base_url}", json=payload, headers=headers)
             response.raise_for_status()
             data = response.json()
 

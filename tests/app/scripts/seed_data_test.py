@@ -5,9 +5,9 @@ from app.scripts.seed_data import ensure_categories, ensure_products, ensure_sup
 
 
 def test_seed_helpers_create_superuser_and_fill_products(db_session, monkeypatch):
-    monkeypatch.setattr("scripts.seed_data.DEFAULT_ADMIN_EMAIL", "boss@example.com")
-    monkeypatch.setattr("scripts.seed_data.DEFAULT_ADMIN_PHONE", "79991112233")
-    monkeypatch.setattr("scripts.seed_data.DEFAULT_ADMIN_PASSWORD", "secret123")
+    monkeypatch.setattr("app.scripts.seed_data.DEFAULT_ADMIN_EMAIL", "boss@example.com")
+    monkeypatch.setattr("app.scripts.seed_data.DEFAULT_ADMIN_PHONE", "79991112233")
+    monkeypatch.setattr("app.scripts.seed_data.DEFAULT_ADMIN_PASSWORD", "secret123")
 
     categories = ensure_categories(db_session)
     admin = ensure_superuser(db_session)
@@ -23,9 +23,9 @@ def test_seed_helpers_create_superuser_and_fill_products(db_session, monkeypatch
 
 
 def test_seed_helpers_are_idempotent(db_session, monkeypatch):
-    monkeypatch.setattr("scripts.seed_data.DEFAULT_ADMIN_EMAIL", "boss@example.com")
-    monkeypatch.setattr("scripts.seed_data.DEFAULT_ADMIN_PHONE", "79991112233")
-    monkeypatch.setattr("scripts.seed_data.DEFAULT_ADMIN_PASSWORD", "secret123")
+    monkeypatch.setattr("app.scripts.seed_data.DEFAULT_ADMIN_EMAIL", "boss@example.com")
+    monkeypatch.setattr("app.scripts.seed_data.DEFAULT_ADMIN_PHONE", "79991112233")
+    monkeypatch.setattr("app.scripts.seed_data.DEFAULT_ADMIN_PASSWORD", "secret123")
 
     categories = ensure_categories(db_session)
     ensure_superuser(db_session)

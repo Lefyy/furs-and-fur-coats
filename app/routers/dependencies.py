@@ -1,4 +1,5 @@
 from fastapi import Depends, Header
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 
 from app.config import settings
@@ -22,16 +23,19 @@ from infrastructure.db.repositories import CartRepository, CategoryRepository, O
 from infrastructure.db.repositories.product_description_generation_repository import ProductDescriptionGenerationRepository
 
 
+security = HTTPBearer()
+
+
 def get_user_repository(session: Session = Depends(get_db_session)) -> UserRepository:
     return UserRepository(session=session)
 
 
-def get_current_user_id(authorization: str | None = Header(default=None)) -> int:
-    if authorization is None or not authorization.startswith("Bearer "):
-        raise UnauthorizedError()
-
-    token = authorization.removeprefix("Bearer ").strip()
+def get_current_user_id(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+) -> int:
+    token = credentials.credentials
     payload = decode_access_token(token=token, secret_key=settings.jwt_secret_key)
+
     subject = payload.get("sub")
     if subject is None:
         raise UnauthorizedError("Invalid token")

@@ -1,6 +1,6 @@
 import pytest
 
-from app.auth.dependencies import get_current_staff_user, get_current_user_id
+from app.routers.dependencies import get_current_staff_user, get_current_user_id
 from app.exceptions import ForbiddenError, UnauthorizedError
 from app.utils.security import create_access_token, hash_password, verify_password
 from infrastructure.db.repositories import UserRepository
