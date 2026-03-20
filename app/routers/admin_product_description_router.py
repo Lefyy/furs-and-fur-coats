@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends, status
 
-from app.auth.dependencies import get_current_staff_user
-from app.routers.dependencies import get_product_description_generation_service
+from app.routers.dependencies import get_current_staff_user, get_product_description_generation_service
 from app.schemas.product_description_generation_schema import ProductDescriptionGenerationResponse
 from app.services.product_description_generation_service import ProductDescriptionGenerationService
 from app.tasks.product_description_tasks import generate_product_description
