@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 import httpx
 
 from app.config import settings
@@ -11,7 +13,7 @@ class OpenRouterGateway:
         self._base_url = (base_url or settings.openrouter_base_url).rstrip("/")
         self._timeout = timeout or settings.openrouter_timeout
 
-    def generate_product_description(self, *, messages: list[dict[str, str]]) -> str:
+    def generate_product_description(self, *, messages: list[dict[str, Any]]) -> str:
         if not self._api_key:
             raise RuntimeError("OpenRouter API key is not configured")
 
@@ -19,6 +21,7 @@ class OpenRouterGateway:
             "model": settings.openrouter_model,
             "temperature": settings.openrouter_temperature,
             "messages": messages,
+            "reasoning": {"enabled": False},
         }
         headers = {
             "Authorization": f"Bearer {self._api_key}",

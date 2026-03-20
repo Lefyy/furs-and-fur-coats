@@ -1,7 +1,7 @@
 import secrets
 
 from app.exceptions import UnauthorizedError
-from infrastructure.cache import redis_client
+from infrastructure.cache.redis_client import redis_client
 
 
 STATE_TTL_SECONDS = 300

@@ -13,7 +13,7 @@ from infrastructure.db.repositories.product_description_generation_repository im
 
 
 class StubOpenRouterGateway:
-    def generate_product_description(self, *, messages: list[dict[str, str]]) -> str:
+    def generate_product_description(self, *, messages: list[dict[str, object]]) -> str:
         return "Сгенерированное описание"
 
 

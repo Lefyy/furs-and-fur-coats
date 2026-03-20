@@ -7,9 +7,9 @@ from infrastructure.db.repositories.product_description_generation_repository im
 class StubOpenRouterGateway:
     def __init__(self, text: str = "Generated text") -> None:
         self.text = text
-        self.messages: list[dict[str, str]] | None = None
+        self.messages: list[dict[str, object]] | None = None
 
-    def generate_product_description(self, *, messages: list[dict[str, str]]) -> str:
+    def generate_product_description(self, *, messages: list[dict[str, object]]) -> str:
         self.messages = messages
         return self.text
 

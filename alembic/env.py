@@ -5,12 +5,21 @@ from sqlalchemy import pool
 
 from alembic import context
 
+from app.config import settings
+
 from infrastructure.db import models
 from infrastructure.db.models.base import Base
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
+
+config.set_main_option(
+    "sqlalchemy.url",
+    "postgresql+psycopg://"
+    f"{settings.postgres_user}:{settings.postgres_password}"
+    f"@{settings.postgres_host}:{settings.postgres_port}/{settings.postgres_db}",
+)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
