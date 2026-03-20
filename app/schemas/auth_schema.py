@@ -22,14 +22,6 @@ class YandexAccessTokenResponse(BaseModel):
     access_token: str
     refresh_token: str
 
-
-class YandexUserInfo(BaseModel):
-    subject: str
-    email: str | None
-    phone: str | None = None
-    refresh_token: str | None = None
-
-
 class YandexOAuthRequest(BaseModel):
     code: str
     state: str

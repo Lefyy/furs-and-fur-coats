@@ -1,8 +1,9 @@
+from dataclasses import dataclass
 import hashlib
 import logging
 
 from app.exceptions import BadRequestError, UnauthorizedError
-from app.schemas.auth_schema import TokenResponse, UserAuthResponse, YandexAccessTokenResponse, YandexUserInfo, YandexOAuthRequest
+from app.schemas.auth_schema import TokenResponse, UserAuthResponse, YandexAccessTokenResponse, YandexOAuthRequest
 from app.services.contact_formatting_service import ContactFormattingService
 from app.services.oauth_refresh_token_service import OAuthRefreshTokenService
 from app.services.oauth_state_service import OAuthStateService
@@ -12,6 +13,13 @@ from infrastructure.db.models import User
 from infrastructure.db.repositories import UserRepository
 
 YANDEX_OAUTH_PROVIDER = "yandex"
+
+@dataclass(slots=True)
+class YandexUserInfo:
+    subject: str
+    email: str | None
+    phone: str | None = None
+    refresh_token: str | None = None
 
 logger = logging.getLogger(__name__)
 

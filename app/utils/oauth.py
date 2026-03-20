@@ -2,7 +2,8 @@ import httpx
 
 from app.config import settings
 from app.exceptions import UnauthorizedError
-from app.services.auth_service import YandexOAuthGateway, YandexUserInfo, YandexAccessTokenResponse
+from app.schemas.auth_schema import YandexAccessTokenResponse
+from app.services.auth_service import YandexOAuthGateway, YandexUserInfo
 
 
 class HttpOAuthGateway(YandexOAuthGateway):

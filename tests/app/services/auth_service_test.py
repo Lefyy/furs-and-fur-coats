@@ -1,5 +1,5 @@
 from app.exceptions import BadRequestError, UnauthorizedError
-from app.services.auth_service import AuthService
+from app.services.auth_service import AuthService, YandexUserInfo
 from app.services.contact_formatting_service import CanonicalFieldResult, ContactFormattingResult
 from app.utils.security import decode_access_token
 from infrastructure.db.repositories import UserRepository
@@ -7,7 +7,6 @@ from infrastructure.db.repositories import UserRepository
 
 class StubYandexOAuthGateway:
     def fetch_user_info(self, code: str):
-        from app.schemas.auth_schema import YandexUserInfo
 
         return YandexUserInfo(
             subject="yandex-sub",
