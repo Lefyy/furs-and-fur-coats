@@ -8,7 +8,7 @@ from app.config import settings
 from app.exceptions import BadRequestError, NotFoundError
 from app.gateways.openrouter import OpenRouterGateway
 from app.utils.product_description_prompt import build_product_description_messages
-from infrastructure.db.models import Product, ProductDescriptionGeneration
+from infrastructure.db.models import Category, Product, ProductDescriptionGeneration
 from infrastructure.db.repositories import ProductRepository
 from infrastructure.db.repositories.product_description_generation_repository import ProductDescriptionGenerationRepository
 
@@ -114,9 +114,27 @@ class ProductDescriptionGenerationService:
         if isinstance(price, Decimal):
             return format(price, "f")
         return str(price) if price is not None else None
+    
+    @staticmethod
+    def _build_category_path(category: Category | None) -> list[str]:
+        if category is None:
+            return []
+
+        path: list[str] = []
+        current: Category | None = category
+        seen_ids: set[int] = set()
+        while current is not None and current.id not in seen_ids:
+            seen_ids.add(current.id)
+            path.append(current.name)
+            current = current.parent
+
+        return list(reversed(path))
 
     @classmethod
     def _build_prompt_attributes(cls, product: Product) -> dict[str, Any]:
+        category_path = cls._build_category_path(product.category)
+        parent_category_name = category_path[-2] if len(category_path) > 1 else None
+
         return {
             "brand": product.brand,
             "fur_type": product.fur_type,
@@ -129,5 +147,7 @@ class ProductDescriptionGenerationService:
             "season": product.season,
             "style_tags": product.style_tags,
             "price": cls._serialize_price(product.price),
-            "category_id": product.category_id,
+            "category_name": product.category.name if product.category is not None else None,
+            "parent_category_name": parent_category_name,
+            "category_path": " → ".join(category_path) if category_path else None,
         }

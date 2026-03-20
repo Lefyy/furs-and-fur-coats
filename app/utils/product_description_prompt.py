@@ -9,7 +9,6 @@ _DESCRIPTION_INSTRUCTION = (
     "упоминайте только наблюдаемые или явно указанные характеристики товара."
 )
 
-
 ATTRIBUTE_LABELS = {
     "brand": "Бренд",
     "fur_type": "Тип меха",
@@ -22,7 +21,9 @@ ATTRIBUTE_LABELS = {
     "season": "Сезон",
     "style_tags": "Теги стиля",
     "price": "Цена",
-    "category_id": "ID категории",
+    "category_name": "Категория",
+    "parent_category_name": "Родительская категория",
+    "category_path": "Путь категории",
 }
 
 def _is_empty_prompt_value(value: Any) -> bool:

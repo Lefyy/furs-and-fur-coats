@@ -7,6 +7,7 @@ from app.utils.product_description_prompt import (
     _serialize_prompt_value,
     build_product_description_messages,
 )
+from infrastructure.db.models import Category, Product
 
 
 def test_is_empty_prompt_value_supports_blank_variants():
@@ -29,7 +30,7 @@ def test_build_attribute_lines_skips_empty_values_and_serializes_lists():
             "features": ["hood", "belt"],
             "style_tags": [],
             "price": "100.00",
-            "category_id": None,
+            "category_name": None,
         }
     )
 
@@ -60,3 +61,21 @@ def test_serialize_price_formats_decimal_and_other_values():
     assert ProductDescriptionGenerationService._serialize_price(Decimal("100.00")) == "100.00"
     assert ProductDescriptionGenerationService._serialize_price(100) == "100"
     assert ProductDescriptionGenerationService._serialize_price(None) is None
+
+def test_build_prompt_attributes_uses_readable_category_context():
+    root_category = Category(id=1, name="Одежда")
+    parent_category = Category(id=2, name="Шубы", parent=root_category)
+    category = Category(id=3, name="Норковые", parent=parent_category)
+    product = Product(
+        name="Шуба из норки",
+        price=Decimal("100.00"),
+        category_id=category.id,
+        category=category,
+    )
+
+    attributes = ProductDescriptionGenerationService._build_prompt_attributes(product)
+
+    assert attributes["category_name"] == "Норковые"
+    assert attributes["parent_category_name"] == "Шубы"
+    assert attributes["category_path"] == "Одежда → Шубы → Норковые"
+    assert "category_id" not in attributes
