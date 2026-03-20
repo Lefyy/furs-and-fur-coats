@@ -4,27 +4,21 @@ from typing import Any
 
 PROMPT_VERSION = "v1"
 
-_SYSTEM_PROMPT = (
-    "You write premium ecommerce product descriptions for a fur coat boutique. "
-    "Keep the tone clear, elegant, and specific to the provided product attributes."
-)
-
 
 ATTRIBUTE_LABELS = {
-    "brand": "Brand",
-    "fur_type": "Fur type",
-    "color": "Color",
-    "length": "Length",
-    "size_range": "Size range",
-    "features": "Features",
-    "material_composition": "Material composition",
-    "target_audience": "Target audience",
-    "season": "Season",
-    "style_tags": "Style tags",
-    "price": "Price",
-    "category_id": "Category ID",
+    "brand": "Бренд",
+    "fur_type": "Тип меха",
+    "color": "Цвет",
+    "length": "Длина",
+    "size_range": "Размерный ряд",
+    "features": "Особенности",
+    "material_composition": "Состав материалов",
+    "target_audience": "Для кого",
+    "season": "Сезон",
+    "style_tags": "Теги стиля",
+    "price": "Цена",
+    "category_id": "ID категории",
 }
-
 
 def build_product_description_messages(*, product_name: str, attributes: dict[str, Any]) -> list[dict[str, str]]:
     attribute_lines: list[str] = []
@@ -39,17 +33,14 @@ def build_product_description_messages(*, product_name: str, attributes: dict[st
         attribute_lines.append(f"- {label}: {serialized}")
 
     if not attribute_lines:
-        attribute_lines.append("- No additional attributes provided")
+        attribute_lines.append("- Дополнительные атрибуты не указаны")
 
-    attributes_block = "\n".join(attribute_lines)
     user_prompt = (
-        f"Product name: {product_name}\n"
-        "Product attributes:\n"
-        f"{attributes_block}\n\n"
-        "Write one polished product description in Russian for an ecommerce admin panel. "
-        "Mention tangible characteristics only, avoid hallucinations, and keep it ready to publish."
+        f"Название товара: {product_name}\n"
+        "Атрибуты товара:\n"
+        f"{chr(10).join(attribute_lines)}\n\n"
+        "Напишите одно готовое к публикации описание товара на русском языке. "
+        "Опирайтесь только на переданные атрибуты, не добавляйте вымышленные свойства и упоминайте "
+        "только наблюдаемые или явно указанные характеристики товара."
     )
-    return [
-        {"role": "system", "content": _SYSTEM_PROMPT},
-        {"role": "user", "content": user_prompt},
-    ]
+    return [{"role": "user", "content": user_prompt}]

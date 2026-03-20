@@ -39,7 +39,8 @@ def test_product_description_generation_service_generate_and_apply(db_session, c
     assert completed_status == "completed"
     assert completed_text == "Новое описание"
     assert gateway.messages is not None
-    assert "Product name" in gateway.messages[1]["content"]
+    assert len(gateway.messages) == 1
+    assert "Название товара" in gateway.messages[0]["content"]
     assert product.old_description == "Old description"
     assert product.description == "Новое описание"
     assert applied.status == "applied"
