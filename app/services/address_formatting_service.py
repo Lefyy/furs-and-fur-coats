@@ -33,7 +33,6 @@ class AddressFormattingService:
                 status="pending_enrichment",
             )
 
-        print(payload)
         cleaned = payload.get('address') or {}
         canonical = str(cleaned.get('result') or cleaned.get('source') or address)
         postal_code = cleaned.get('postal_code')
