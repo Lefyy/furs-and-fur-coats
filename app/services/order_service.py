@@ -5,6 +5,7 @@ from app.schemas import OrderResponse
 from app.services.address_formatting_service import AddressFormattingResult, AddressFormattingService
 from app.tasks.enrichment_tasks import enrich_order_address
 from infrastructure.db.models import Order
+from infrastructure.db.models.order_status import OrderStatusName
 from infrastructure.db.repositories import OrderRepository
 
 
@@ -37,7 +38,7 @@ class OrderService:
                 postal_code=formatting_result.postal_code,
                 address_metadata=formatting_result.metadata,
                 address_enrichment_status=formatting_result.status,
-                status_name="created",
+                status_name=OrderStatusName.CREATED.value,
             )
         except ValueError as exc:
             raise BadRequestError(str(exc)) from exc

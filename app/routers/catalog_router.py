@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, Query
 
 from app.routers.dependencies import get_catalog_service
 from app.schemas import CategoriesResponse, ProductResponse, ProductsListResponse
-from app.services import CatalogService
+from app.services.catalog_service import CatalogService
 
 router = APIRouter(tags=["catalog"])
 

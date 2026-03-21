@@ -1,13 +1,13 @@
 from decimal import Decimal
 
-from infrastructure.db.models import Category, OrderItem, OrderStatus, Product, User
+from infrastructure.db.models import Category, OrderItem, OrderStatus, OrderStatusName, Product, User
 from infrastructure.db.repositories import CartRepository, OrderRepository
 
 
 def test_create_order_from_cart_creates_items_and_clears_cart(db_session):
     user = User(email="o@example.com", email_raw="o@example.com", phone="78880000000", phone_raw="78880000000", password_hash="hash", is_staff=False)
     category = Category(name="Premium")
-    status = OrderStatus(name="created")
+    status = OrderStatus(name=OrderStatusName.CREATED.value)
     db_session.add_all([user, category, status])
     db_session.flush()
 
@@ -46,7 +46,7 @@ def test_create_order_from_cart_creates_items_and_clears_cart(db_session):
 def test_order_repository_updates_address_enrichment_fields(db_session):
     user = User(email="u@example.com", email_raw="u@example.com", phone="79990000000", phone_raw="79990000000", password_hash="hash", is_staff=False)
     category = Category(name="Premium")
-    status = OrderStatus(name="created")
+    status = OrderStatus(name=OrderStatusName.CREATED.value)
     db_session.add_all([user, category, status])
     db_session.flush()
     product = Product(name="Fox", description="fox", price=Decimal("200.00"), category_id=category.id)

@@ -6,7 +6,9 @@ from app.config import settings
 from app.exceptions import ForbiddenError, UnauthorizedError
 from app.gateways.dadata import DadataGateway
 from app.gateways.openrouter import OpenRouterGateway
-from app.services import CartService, CatalogService, OrderService
+from app.services.order_service import OrderService
+from app.services.cart_service import CartService
+from app.services.catalog_service import CatalogService
 from app.services.address_formatting_service import AddressFormattingService
 from app.services.auth_service import AuthService
 from app.services.auth_token_factory import AuthTokenFactory

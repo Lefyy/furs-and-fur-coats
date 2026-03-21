@@ -1,7 +1,16 @@
+from enum import Enum
+
 from sqlalchemy import Integer, String
 from sqlalchemy.orm import mapped_column, relationship
 
 from infrastructure.db.models.base import Base
+
+
+class OrderStatusName(str, Enum):
+    CREATED = "created"
+    PAID = "paid"
+    SHIPPED = "shipped"
+    CANCELLED = "cancelled"
 
 
 class OrderStatus(Base):

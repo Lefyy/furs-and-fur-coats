@@ -12,7 +12,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from infrastructure.db import models
-from infrastructure.db.models import Category, OrderStatus, Product, User
+from infrastructure.db.models import Category, OrderStatus, OrderStatusName, Product, User
 from infrastructure.db.models.base import Base
 
 
@@ -84,7 +84,7 @@ def product_factory() -> callable:
 @pytest.fixture()
 def order_status_factory() -> callable:
     def factory(**overrides) -> OrderStatus:
-        defaults = {"name": "created"}
+        defaults = {"name": OrderStatusName.CREATED.value}
         defaults.update(overrides)
         return OrderStatus(**defaults)
 

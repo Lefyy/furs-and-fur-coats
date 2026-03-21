@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 
 from app.routers.dependencies import get_cart_service, get_current_user_id
 from app.schemas import CartItemRequest, CartResponse, DeleteCartItemRequest
-from app.services import CartService
+from app.services.cart_service import CartService
 
 router = APIRouter(tags=["cart"])
 

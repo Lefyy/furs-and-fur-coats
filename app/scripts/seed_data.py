@@ -8,7 +8,9 @@ from sqlalchemy import func, select
 
 from app.utils.security import hash_password
 from infrastructure.db.db_session import SessionLocal
-from infrastructure.db.models import Category, Product, User
+from infrastructure.db.models import Category, OrderStatus, Product, User
+from infrastructure.db.models.order_status import OrderStatusName
+
 
 PRODUCT_TARGET_COUNT = 100
 DEFAULT_ADMIN_EMAIL = os.getenv("SUPERUSER_EMAIL", "admin@example.com")
@@ -31,6 +33,26 @@ STYLE_TAGS = [["classic", "premium"], ["modern", "minimal"], ["luxury", "warm"]]
 FEATURE_SETS = [["hood", "belt"], ["waterproof lining", "stand collar"], ["detachable hood", "zip pockets"]]
 BRANDS = ["Sever Luxe", "Arctic Atelier", "Nordic Line", "Velvet Frost"]
 IMAGE_URL_TEMPLATE = "https://placehold.co/600x800?text=Fur+Product+{index}"
+ORDER_STATUSES = [status.value for status in OrderStatusName]
+
+
+def ensure_order_statuses(session) -> list[OrderStatus]:
+    statuses_by_name = {status.name: status for status in session.scalars(select(OrderStatus)).all()}
+    created = False
+
+    for status_name in ORDER_STATUSES:
+        if status_name in statuses_by_name:
+            continue
+        status = OrderStatus(name=status_name)
+        session.add(status)
+        session.flush()
+        statuses_by_name[status_name] = status
+        created = True
+
+    if created:
+        session.commit()
+
+    return [statuses_by_name[name] for name in ORDER_STATUSES]
 
 
 def ensure_categories(session) -> list[Category]:
@@ -153,12 +175,14 @@ def ensure_products(session, categories: list[Category]) -> int:
 
 def main() -> None:
     with SessionLocal() as session:
+        statuses = ensure_order_statuses(session)
         categories = ensure_categories(session)
         admin = ensure_superuser(session)
         created_products = ensure_products(session, categories)
         total_products = session.scalar(select(func.count(Product.id))) or 0
         print(
             f"Seed complete: admin={admin.email} is_staff={admin.is_staff}, created_products={created_products}, total_products={total_products}"
+            f"Seed complete: admin={admin.email} is_staff={admin.is_staff}, order_statuses={len(statuses)}, created_products={created_products}, total_products={total_products}"
         )
 
 

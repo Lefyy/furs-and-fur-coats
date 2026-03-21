@@ -2,7 +2,7 @@ from decimal import Decimal
 
 from app.services.address_formatting_service import AddressFormattingResult
 from app.services.order_service import OrderService
-from infrastructure.db.models import Category, OrderStatus, Product, User
+from infrastructure.db.models import Category, OrderStatus, OrderStatusName, Product, User
 from infrastructure.db.repositories import CartRepository, OrderRepository
 
 class StubAddressFormattingService:
@@ -32,7 +32,7 @@ class StubAddressFormattingService:
 def seed_order_context(db_session):
     user = User(email="order@example.com", email_raw="order@example.com", phone="79994444444", phone_raw="79994444444", password_hash="hash", is_staff=False)
     category = Category(name="fur")
-    status = OrderStatus(name="created")
+    status = OrderStatus(name=OrderStatusName.CREATED.value)
     db_session.add_all([user, category, status])
     db_session.flush()
 

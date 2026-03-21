@@ -3,7 +3,7 @@ from decimal import Decimal
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
-from infrastructure.db.models import Cart, CartItem, Order, OrderItem, OrderStatus, Product
+from infrastructure.db.models import Cart, CartItem, Order, OrderItem, OrderStatus, OrderStatusName, Product
 from infrastructure.db.repositories.base import BaseRepository
 
 
@@ -101,7 +101,7 @@ class OrderRepository(BaseRepository):
         postal_code: str | None,
         address_metadata: dict | None,
         address_enrichment_status: str | None,
-        status_name: str = "created",
+        status_name: str = OrderStatusName.CREATED.value,
     ) -> Order:
 
         cart: Cart | None = None

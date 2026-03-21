@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 
 from app.routers.dependencies import get_current_user_id, get_order_service
 from app.schemas import OrderCreateRequest, OrderResponse
-from app.services import OrderService
+from app.services.order_service import OrderService
 
 router = APIRouter(tags=["orders"])
 

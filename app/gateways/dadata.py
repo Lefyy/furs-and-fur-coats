@@ -83,11 +83,19 @@ class DadataGateway:
 
     def _parse_clean_contact_response(self, response: Any, *, field_names: list[str], structure: list[str]) -> dict[str, dict[str, Any]]:
         normalized_response = self._normalize_clean_record_response(response, structure=structure)
-        cleaned_values = normalized_response.get("data", [[]])
-        first_record = cleaned_values[0] if cleaned_values else []
+        cleaned_values = normalized_response.get("data", [])
+
+        if not isinstance(cleaned_values, list):
+            cleaned_values = []
+
+        if cleaned_values and all(isinstance(item, dict) for item in cleaned_values):
+            records = cleaned_values
+        else:
+            first_record = cleaned_values[0] if cleaned_values else []
+            records = first_record if isinstance(first_record, list) else []
 
         result = {"email": {}, "phone": {}, "address": {}}
-        for field_name, cleaned_value in zip(field_names, first_record, strict=False):
+        for field_name, cleaned_value in zip(field_names, records, strict=False):
             result[field_name] = cleaned_value if isinstance(cleaned_value, dict) else {}
 
         return result
